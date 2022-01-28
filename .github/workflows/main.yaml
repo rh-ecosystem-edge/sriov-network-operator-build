@@ -1,0 +1,34 @@
+# Workflow that performs daily builds of k8snetworkplumbingwg/sriov-network-operator
+# The images are based on CentOS 8, CentOS Stream 9, Fedora and Red Hat UBI
+
+name: Multi-arch and multi-distro build for sriov-network-* container images
+on:
+  schedule:
+    - cron: '0 0 * * *'  # every day at midnight
+
+  jobs:
+    build:
+      strategy:
+        matrix:
+          container: [ operator ]
+          baseos-flavor: [ centos-stream ]
+          baseos-version: [ 9 ]
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout current repository for the Dockerfiles
+          uses: actions/checkout@v2
+
+        - name: Checkout k8snetworkplumbingwg/sriov-network-operator for the code
+          uses: actions/checkout@v2
+          with:
+            repository: k8snetworkplumbingwg/sriov-network-operator
+            path: sriov-network-operator
+
+        - name: Build the ${{ matrix.container }} image for ${{ matrix.baseos-flavor }}-${{ matrix.baseos-version }}
+          uses: redhat-actions/buildah-build@v2
+          with:
+            image: quay.io/rh-ecosystem-edge/sriov-network-${{ matrix.container }}
+            tags: "${{ matrix.baseos }}-${{ matrix.baseos-version }}"
+            containerfiles: |
+              ./${{ matrix.baseos }}/${{ matrix.baseos-version }}/Dockerfile.${{ matrix.container }}
+            context: sriov-network-operator

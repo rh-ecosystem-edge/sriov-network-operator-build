@@ -1,0 +1,18 @@
+FROM quay.io/centos/centos:stream9 AS builder
+ARG APP_ROOT=/opt/app-root/src
+WORKDIR ${APP_ROOT}
+RUN dnf -y install git golang && dnf clean all
+COPY . .
+RUN make _build-sriov-network-config-daemon BIN_PATH=.
+RUN make plugins BIN_PATH=.
+
+FROM quay.io/centos/centos:stream9
+ARG MSTFLINT=mstflint
+RUN ARCH_DEP_PKGS=$(if [ "$(uname -m)" != "s390x" ]; then echo -n ${MSTFLINT} ; fi) && dnf -y install hwdata $ARCH_DEP_PKGS && dnf clean all
+LABEL io.k8s.display-name="sriov-network-config-daemon" \
+      io.k8s.description="This is a daemon that manage and config sriov network devices in Kubernetes cluster"
+COPY --from=builder /opt/app-root/src/sriov-network-config-daemon /usr/bin/
+COPY --from=builder /opt/app-root/src/plugins /plugins
+COPY bindata /bindata
+ENV PLUGINSPATH=/plugins
+ENTRYPOINT ["/usr/bin/sriov-network-config-daemon"]
