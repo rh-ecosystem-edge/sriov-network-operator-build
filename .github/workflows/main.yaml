@@ -12,7 +12,7 @@ jobs:
   build:
     strategy:
       matrix:
-        container: [ operator ]
+        container: [ operator, config-daemon, webhook ]
         distro-name: [ centos-stream ]
         distro-version: [ 9 ]
     runs-on: ubuntu-latest
