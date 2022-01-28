@@ -12,8 +12,8 @@ jobs:
     strategy:
       matrix:
         container: [ operator ]
-        baseos-flavor: [ centos-stream ]
-        baseos-version: [ 9 ]
+        distro-name: [ centos-stream ]
+        distro-version: [ 9 ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout current repository for the Dockerfiles
@@ -25,11 +25,25 @@ jobs:
           repository: k8snetworkplumbingwg/sriov-network-operator
           path: sriov-network-operator
 
-      - name: Build the ${{ matrix.container }} image for ${{ matrix.baseos-flavor }}-${{ matrix.baseos-version }}
+      - name: Build the ${{ matrix.container }} image for ${{ matrix.distro-name }}-${{ matrix.distro-version }}
+        id: build-image
         uses: redhat-actions/buildah-build@v2
         with:
-          image: quay.io/rh-ecosystem-edge/sriov-network-${{ matrix.container }}
-          tags: "${{ matrix.baseos-flavor }}-${{ matrix.baseos-version }}"
+          image: sriov-network-${{ matrix.container }}
+          tags: "${{ matrix.distro-name }}-${{ matrix.distro-version }}"
           containerfiles: |
-            ./${{ matrix.baseos-flavor }}/${{ matrix.baseos-version }}/Dockerfile.${{ matrix.container }}
+            ./${{ matrix.distro-name }}/${{ matrix.distro-version }}/Dockerfile.${{ matrix.container }}
           context: sriov-network-operator
+
+      - name: Push the ${{ matrix.container }} image for ${{ matrix.distro-name }}-${{ matrix.distro-version }} to Quay.io
+        id: push-to-quay
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: sriov-network-${{ matrix.container }}
+          tags: "${{ matrix.distro-name }}-${{ matrix.distro-version }}"
+          registry: quay.io/rh-ecosystem-edge
+          username: ${{ secrets.QUAY_ROBOT_USERNAME }}
+          password: ${{ secrets.QUAY_ROBOT_TOKEN }}
+
+      - name: Print image url
+        run: echo "Image pushed to ${{ steps.push-to-quay.outputs.registry-paths }}"
