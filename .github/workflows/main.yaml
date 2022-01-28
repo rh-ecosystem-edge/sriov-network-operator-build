@@ -4,6 +4,7 @@
 name: Multi-arch and multi-distro build for sriov-network-* container images
 on:
   pull_request:
+  workflow_dispatch:
   schedule:
     - cron: '0 0 * * *'  # every day at midnight
 
