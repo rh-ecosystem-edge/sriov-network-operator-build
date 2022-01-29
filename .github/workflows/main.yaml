@@ -21,6 +21,13 @@ jobs:
       - name: Checkout current repository for the Dockerfiles
         uses: actions/checkout@v2
 
+      - name: Lint Dockerfile
+        if: github.event_name == 'pull_request'
+        uses: hadolint/hadolint-action@v1.6.0
+        with:
+          dockerfile: ${{ matrix.distro-name }}/${{ matrix.distro-version }}/Dockerfile.${{ matrix.container }}
+          failure-threshold: error
+
       - name: Checkout k8snetworkplumbingwg/sriov-network-operator for the code
         uses: actions/checkout@v2
         with:
