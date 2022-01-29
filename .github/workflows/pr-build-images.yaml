@@ -1,0 +1,12 @@
+name: Multi-arch and multi-distro build for sriov-network-* container images
+on:
+  pull_request:
+
+jobs:
+  build-images:
+    strategy:
+      matrix:
+        container: [ operator, config-daemon, webhook ]
+        distro-name: [ centos-stream ]
+        distro-version: [ 9 ]
+    uses: ./.github/workflows/wf-build-image.yaml
