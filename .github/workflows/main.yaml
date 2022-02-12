@@ -44,6 +44,15 @@ jobs:
             ./${{ matrix.distro-name }}/${{ matrix.distro-version }}/Dockerfile.${{ matrix.container }}
           context: sriov-network-operator
 
+      - name: List container images
+        run: docker images
+
+      - name: Scan the ${{ matrix.container }} image for ${{ matrix.distro-name }}-${{ matrix.distro-version }} with Anchore
+        id: scan-image
+        uses: anchore/scan-action@v3
+        with:
+          image: sriov-network-${{ matrix.container }}:${{ matrix.distro-name }}-${{ matrix.distro-version }}
+
       - name: Push the ${{ matrix.container }} image for ${{ matrix.distro-name }}-${{ matrix.distro-version }} to Quay.io
         id: push-to-quay
         if: |
